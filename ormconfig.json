@@ -1,0 +1,17 @@
+[
+    {
+        "name": "default",
+        "type": "mysql",
+        "host": "localhost",
+        "port": 3306,
+        "username": "root",
+        "password": 123123123,
+        "database": "affiliate",
+        "synchronize": true,
+        "migrations": [
+            "dist/migrations/*{.ts,.js}"
+        ],
+        "migrationsTableName": "migrations_typeorm",
+        "migrationsRun": true
+    }
+]

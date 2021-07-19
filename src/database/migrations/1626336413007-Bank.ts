@@ -5,9 +5,9 @@ import { BankSeed } from '../seed/bank.seed';
 export class Bank1626336413007 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await getRepository('bank').save(BankSeed);
-    // const userRoleSeed: any = UserRoleSeed;
-    // userRoleSeed.permissions = permissions;
-    // await getRepository('roles').save(userRoleSeed);
+    // const memberRoleSeed: any = MemberRoleSeed;
+    // memberRoleSeed.permissions = permissions;
+    // await getRepository('roles').save(memberRoleSeed);
   }
   public async down(queryRunner: QueryRunner): Promise<void> {}
 }

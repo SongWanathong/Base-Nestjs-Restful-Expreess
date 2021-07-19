@@ -5,8 +5,7 @@ import { ConfigModule } from '@nestjs/config'; //npm install --save @nestjs/conf
 import { TypeOrmModule } from '@nestjs/typeorm'; //npm install --save @nestjs/typeorm typeorm mysql
 import ormConfigProd from './config/orm.config.prod';
 import { SwaggerModule } from '@nestjs/swagger';
-import { UserModule } from './user/user.module';
-import { BankModule } from './bank/bank.module';
+import { MemberModule } from './modules/www/member/member.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -21,8 +20,7 @@ import { AppController } from './app.controller';
         process.env.NODE_ENV !== 'production' ? ormConfig : ormConfigProd,
     }),
     SwaggerModule,
-    UserModule,
-    BankModule,
+    MemberModule,
   ],
   controllers: [AppController],
   providers: [AppService],

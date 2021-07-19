@@ -46,7 +46,7 @@ async function bootstrap() {
       `API service for Member,Mobile App UNICORN AUTO,affiliate : BASE URL = ${process.env.APP_URL}`,
     )
     .setVersion('1.0')
-    .addTag('user')
+    .addTag('member')
     .build();
   process.env.TZ = 'Asia/Bangkok';
   const document = SwaggerModule.createDocument(app, config);

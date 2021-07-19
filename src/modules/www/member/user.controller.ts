@@ -8,10 +8,12 @@ import {
   Delete,
   UsePipes,
   ValidationPipe,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { MemberService } from './member.service';
+import { CreateMemberDto } from './dto/create-member.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
 import {
   ApiBody,
   ApiOkResponse,
@@ -22,10 +24,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-@Controller('api/user')
-@ApiTags('user')
-export class UserController {
-  constructor(private readonly userService: UserService) {}
+@Controller('member')
+@ApiTags('member')
+export class MemberController {
+  constructor(private readonly memberService: MemberService) {}
 
   @Post()
   @ApiBody({ type: '' })
@@ -33,28 +35,31 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'ข้อมูลที่ใส่มาไม่ถูกต้อง' })
   @ApiResponse({ status: 500, description: 'เลขบัญชีซ้ำในระบบ' })
   @UsePipes(new ValidationPipe({ transform: true }))
-  create(@Body() createUserDto: CreateUserDto): CreateUserDto {
-    return this.userService.create(createUserDto);
+  create(@Body() createMemberDto: CreateMemberDto): any {
+    return this.memberService.create(createMemberDto);
   }
 
   @Get()
   findAll() {
-    return 'ggez';
-    // return this.userService.findAll();
+    try {
+      return this.memberService.findAll();
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+    return this.memberService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  update(@Param('id') id: string, @Body() updateMemberDto: UpdateMemberDto) {
+    return this.memberService.update(+id, updateMemberDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+    this.memberService.remove(+id);
   }
 }

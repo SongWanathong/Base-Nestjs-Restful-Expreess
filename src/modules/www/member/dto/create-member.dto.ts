@@ -1,7 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length, IsNumber, Max } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  Length,
+  IsNumber,
+  Max,
+  IsOptional,
+  IsMobilePhone,
+} from 'class-validator';
 
-export class CreateUserDto {
+export class CreateMemberDto {
+  @IsMobilePhone()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Length(1, 10)
+  phone: string;
+
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -17,8 +31,8 @@ export class CreateUserDto {
   @IsNumber()
   @IsNotEmpty()
   @ApiProperty()
-  @Max(20)
-  bankAccount: number;
+  @Max(18)
+  bank: any;
 
   @IsString()
   @IsNotEmpty()
@@ -42,4 +56,8 @@ export class CreateUserDto {
   @ApiProperty()
   @Length(8, 13)
   password: string;
+
+  @IsOptional()
+  @ApiProperty()
+  bonusId: number;
 }

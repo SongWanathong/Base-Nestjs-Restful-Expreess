@@ -1,20 +1,28 @@
 import { Expose } from 'class-transformer';
+
+import { Bank } from './bank.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity()
-export class User {
-  constructor(partial?: Partial<User | User[]>) {
+export class Member {
+  constructor(partial?: Partial<Member | Member[]>) {
     Object.assign(this, partial);
   }
 
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn()
   @Expose()
-  id: string;
+  id: number;
+
+  @Column()
+  @Expose()
+  phone: string;
 
   @Column()
   @Expose()
@@ -26,17 +34,13 @@ export class User {
 
   @Column()
   @Expose()
-  bankAccount: string;
-
-  @Column()
-  @Expose()
   bankAccountNumber: string;
 
   @Column()
   @Expose()
   lineId: string;
 
-  @Column()
+  @Column({ nullable: true })
   @Expose()
   recommender: string;
 
@@ -44,11 +48,23 @@ export class User {
   @Expose()
   password: string;
 
+  @Column({ nullable: true })
+  @Expose()
+  bonusId: number;
+
+  @Column({ nullable: true })
+  @Expose()
+  parentId: number;
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
   public created_at: Date;
+
+  @ManyToOne(() => Bank)
+  @JoinColumn()
+  bank: Bank;
 }
 
 // "firstName":"demoFirstName",

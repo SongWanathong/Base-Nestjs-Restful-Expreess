@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
-import { Bank } from 'src/bank/entities/bank.entity';
+import { Member } from 'src/database/enitity/member.entity';
+import { Bank } from 'src/database/enitity/bank.entity';
 // import { CompanyBank } from './../Bank/companybank.entity';
 
 export default registerAs(
@@ -13,7 +13,7 @@ export default registerAs(
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    entities: [User, Bank],
+    entities: [Member, Bank],
     synchronize: true,
     // debug: true    :: for debug mysql
     timezone: 'Asia/Bangkok',
@@ -21,5 +21,8 @@ export default registerAs(
       charset: 'utf8mb4',
     },
     logging: ['query', 'error'],
+    migrations: ['dist/database/migrations/*{.ts,.js}'],
+    migrationsTableName: 'migrations_typeorm',
+    migrationsRun: true,
   }),
 );
