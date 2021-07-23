@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 
 @Entity()
@@ -18,6 +19,7 @@ export class Member {
 
   @PrimaryGeneratedColumn()
   @Expose()
+  @Index()
   id: number;
 
   @Column()

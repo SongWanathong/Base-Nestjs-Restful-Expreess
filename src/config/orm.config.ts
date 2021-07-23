@@ -7,7 +7,7 @@ import { Bank } from 'src/database/enitity/bank.entity';
 export default registerAs(
   'orm.config',
   (): TypeOrmModuleOptions => ({
-    type: 'mysql',
+    type: 'postgres',
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
     username: process.env.DB_USER,
@@ -16,7 +16,7 @@ export default registerAs(
     entities: [Member, Bank],
     synchronize: true,
     // debug: true    :: for debug mysql
-    timezone: 'Asia/Bangkok',
+    // timezone: 'Asia/Bangkok',
     extra: {
       charset: 'utf8mb4',
     },

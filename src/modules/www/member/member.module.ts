@@ -6,7 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Member } from 'src/database/enitity/member.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Member])],
+  imports: [TypeOrmModule.forFeature([Member]), SwaggerModule],
   controllers: [MemberController],
   providers: [MemberService],
 })

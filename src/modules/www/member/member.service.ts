@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
@@ -90,8 +95,14 @@ export class MemberService {
   // }
   async update(id: number, updateMemberDto: UpdateMemberDto): Promise<any> {
     try {
-      await this.memberModel.update(id, updateMemberDto);
-      return this.findOne(id);
+      const targetMember = await this.findOne(id);
+      if (!targetMember)
+        throw new HttpException(
+          ' id not already exists',
+          HttpStatus.BAD_REQUEST,
+        );
+
+      return await this.memberModel.update(id, updateMemberDto);
     } catch (error) {
       throw error;
     }
@@ -106,9 +117,64 @@ export class MemberService {
           HttpStatus.BAD_REQUEST,
         );
 
-      return await this.memberModel.delete(id);
+      await this.memberModel.delete(id);
+
+      return 'member has been deleted';
     } catch (error) {
       throw error;
     }
   }
+
+  private generateBankAccRef(bankName: string, bankAcc: string, phone: string) {
+    if (bankName == 'KBANK') {
+      //    0911319896   X131989X
+      bankAcc = bankAcc.substring(3, 9);
+      const bankAccRef = 'X' + bankAcc + 'X';
+      return bankAccRef;
+    } else if (bankName == 'TRUEWALLET') {
+      return phone.toString();
+    } else if (bankName == 'GSB') {
+      bankAcc = bankAcc.substring(6);
+      const bankAccRef = 'X' + bankAcc;
+      return bankAccRef;
+    } else if (bankName == 'BAAC') {
+      bankAcc = bankAcc.substring(6);
+      const bankAccRef = 'X' + bankAcc;
+      return bankAccRef;
+    } else {
+      //     4300867619   X867619
+      bankAcc = bankAcc.substring(4);
+      const bankAccRef = 'X' + bankAcc;
+      return bankAccRef;
+    }
+  }
+
+  // public async dataValidate(
+  //   input: CreateMemberDto,
+  //   hash: string,
+  // ): Promise<Object | undefined> {
+  //   if ((await this.countByphone(input.phone, hash)) > 0) {
+  //     return {
+  //       status: false,
+  //       data: new BadRequestException('เบอร์โทรศัพท์ซ้ำกับในระบบ'),
+  //     };
+  //   }
+  //   if (await this.companyBankCheck(input.bankAcc, hash)) {
+  //     return {
+  //       status: false,
+  //       data: new BadRequestException('เลขบัญชีซ้ำกับในระบบ'),
+  //     };
+  //   }
+  //   if (
+  //     (await this.countByNameAndLastname(input.name, input.lastname, hash)) > 0
+  //   ) {
+  //     return {
+  //       status: false,
+  //       data: new BadRequestException('ชื่อและนามสกุลซ้ำกับในระบบ'),
+  //     };
+  //   }
+
+  //   this.logger.debug(`getBankById SQL =${query.getSql()}`);
+  //   return await query.getOne();
+  // }
 }
