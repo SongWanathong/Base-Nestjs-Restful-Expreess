@@ -3,36 +3,48 @@ import {
   HttpStatus,
   Injectable,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { Member } from 'src/database/enitity/member.entity';
-import { Repository } from 'typeOrm';
+import { Like, MoreThan, Repository, SelectQueryBuilder } from 'typeOrm';
 import {
   paginate,
   Pagination,
   IPaginationOptions,
 } from 'nestjs-typeorm-paginate';
+import * as moment from 'moment';
+import { Length } from 'class-validator';
+import { Bank } from 'src/database/enitity/bank.entity';
 
 @Injectable()
 export class MemberService {
   constructor(
     @InjectRepository(Member)
     private readonly memberModel: Repository<Member>,
+    @InjectRepository(Bank)
+    private readonly bankModel: Repository<Bank>,
   ) {}
 
+  private getEventsBaseQuery() {
+    return this.memberModel
+      .createQueryBuilder('member')
+      .orderBy('member.id', 'DESC');
+  }
   async create(input: CreateMemberDto): Promise<Member> {
     try {
       const targetMember = await this.find({ phone: input.phone });
 
       if (targetMember)
-        throw new HttpException(
-          'Phone Has Been Already Exist',
-          HttpStatus.BAD_REQUEST,
-        );
-
-      return await this.memberModel.save(input);
+        throw new BadRequestException('Phone Has Been Already Exist');
+      const bankAccRef = await this.generateBankAccRef(
+        input.bank,
+        input.bankAccountNumber,
+        input.phone,
+      );
+      return await this.memberModel.save({ ...input, bankAccRef });
     } catch (error) {
       throw error;
     }
@@ -44,6 +56,7 @@ export class MemberService {
         .createQueryBuilder('member')
         .leftJoinAndSelect('member.bank', 'bank')
         .where(query)
+        // .setParameter('date', date.toISOString())
         .getMany();
     } catch (error) {
       throw error;
@@ -58,8 +71,7 @@ export class MemberService {
         .leftJoinAndSelect('member.bank', 'bank')
         .getOne();
 
-      if (!targetUser)
-        throw new HttpException('Member Not found ', HttpStatus.BAD_REQUEST);
+      if (!targetUser) throw new NotFoundException('Member Not found ');
 
       return targetUser;
     } catch (error) {
@@ -78,29 +90,50 @@ export class MemberService {
       throw error;
     }
   }
+  async findAndPagination(
+    input,
+    paginateOptions: IPaginationOptions,
+    options,
+  ): Promise<Pagination<Member>> {
+    try {
+      const queryBuilder = this.memberModel
+        .createQueryBuilder('member')
+        .where(input)
 
-  // async findPaginate(
-  //   query: any,
-  //   options: IPaginationOptions,
-  // ): Promise<Pagination<Member>> {
-  //   try {
-  //     return await this.memberModel
-  //       .createQueryBuilder('member')
-  //       .where(query)
-  //       .leftJoinAndSelect('member.bank', 'bank')
-  //       .getOne();
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
+        // .andWhere(
+        //   input.bankAccRef ? 'member.bankAccRef ILIKE :bankAccRef' : null,
+        //   {
+        //     bankAccRef: `%${input.bankAccRef}%`,
+        //   },
+        // )
+        // .andWhere(input.lineId ? 'member.lineId ILIKE :lineId' : null, {
+        //   lineId: `%${input.lineId}%`,
+        // })
+        // .andWhere(input.parentId ? 'member.parentId ILIKE :parentId' : null, {
+        //   parentId: `%${input.parentId}%`,
+        // })
+        // .andWhere(
+        //   input.recommender ? 'member.recommender ILIKE :recommender' : null,
+        //   {
+        //     recommender: `%${input.recommender}%`,
+        //   },
+        // )
+        .leftJoinAndSelect('member.bank', 'bank')
+        .orderBy('member.created_at', options.orderBy);
+      const resultPaginate = await paginate<Member>(
+        queryBuilder,
+        paginateOptions,
+      );
+
+      return resultPaginate;
+    } catch (error) {
+      throw error;
+    }
+  }
   async update(id: number, updateMemberDto: UpdateMemberDto): Promise<any> {
     try {
       const targetMember = await this.findOne(id);
-      if (!targetMember)
-        throw new HttpException(
-          ' id not already exists',
-          HttpStatus.BAD_REQUEST,
-        );
+      if (!targetMember) throw new NotFoundException('member not found');
 
       return await this.memberModel.update(id, updateMemberDto);
     } catch (error) {
@@ -112,32 +145,34 @@ export class MemberService {
     try {
       const targetMember = await this.findOne(id);
       if (!targetMember)
-        throw new HttpException(
-          ' id not already exists',
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new HttpException('mumber is not found', HttpStatus.BAD_REQUEST);
 
       await this.memberModel.delete(id);
 
-      return 'member has been deleted';
+      return 'member has been delete';
     } catch (error) {
       throw error;
     }
   }
 
-  private generateBankAccRef(bankName: string, bankAcc: string, phone: string) {
-    if (bankName == 'KBANK') {
+  private async generateBankAccRef(
+    bankName: any,
+    bankAcc: string,
+    phone: string,
+  ) {
+    const targetBank = await this.bankModel.findOne({ id: bankName });
+    if (targetBank.code == 'KBANK') {
       //    0911319896   X131989X
       bankAcc = bankAcc.substring(3, 9);
       const bankAccRef = 'X' + bankAcc + 'X';
       return bankAccRef;
-    } else if (bankName == 'TRUEWALLET') {
+    } else if (targetBank.code == 'TRUEWALLET') {
       return phone.toString();
-    } else if (bankName == 'GSB') {
+    } else if (targetBank.code == 'GSB') {
       bankAcc = bankAcc.substring(6);
       const bankAccRef = 'X' + bankAcc;
       return bankAccRef;
-    } else if (bankName == 'BAAC') {
+    } else if (targetBank.code == 'BAAC') {
       bankAcc = bankAcc.substring(6);
       const bankAccRef = 'X' + bankAcc;
       return bankAccRef;
@@ -149,10 +184,29 @@ export class MemberService {
     }
   }
 
+  async baseFindAll(query = null, startDate = null, endDate = null) {
+    try {
+      endDate = new Date();
+      if (startDate && endDate) {
+        return await this.getEventsBaseQuery()
+          .where('DATE(t.created_at) >= DATE(:startDate)', { startDate })
+          .andWhere('DATE(member.created_at) >= DATE(:endDate)', { endDate })
+          .getMany();
+      } else {
+        return await this.getEventsBaseQuery()
+          .where(query)
+
+          .getMany();
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // public async dataValidate(
   //   input: CreateMemberDto,
   //   hash: string,
-  // ): Promise<Object | undefined> {
+  // ): Promise<any | undefined> {
   //   if ((await this.countByphone(input.phone, hash)) > 0) {
   //     return {
   //       status: false,

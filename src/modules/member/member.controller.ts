@@ -8,10 +8,14 @@ import {
   Delete,
   UsePipes,
   ValidationPipe,
+  Query,
+  ClassSerializerInterceptor,
+  UseInterceptors,
 } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
+import scopeSearch from 'src/helpers/searchQuery';
 import {
   ApiBody,
   ApiOkResponse,
@@ -22,6 +26,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Member } from 'src/database/enitity/member.entity';
+import {
+  paginate,
+  Pagination,
+  IPaginationOptions,
+} from 'nestjs-typeorm-paginate';
 @Controller('member')
 @ApiTags('member')
 export class MemberController {
@@ -37,11 +46,26 @@ export class MemberController {
   }
 
   @Get()
+  @UseInterceptors(ClassSerializerInterceptor)
   findAll() {
     return this.memberService.findAll();
   }
 
+  @Get('/find')
+  async findAndPagination(@Query() data): Promise<any> {
+    const { query, option } = scopeSearch(data);
+    return this.memberService.findAndPagination(
+      query,
+      {
+        page: option.page,
+        limit: option.limit,
+      },
+      option,
+    );
+  }
+
   @Get(':id')
+  @UseInterceptors(ClassSerializerInterceptor)
   @ApiParam({
     name: 'id',
     type: 'id',

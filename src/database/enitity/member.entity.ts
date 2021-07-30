@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Expose, Exclude } from 'class-transformer';
 
 import { Bank } from './bank.entity';
 import {
@@ -9,6 +9,7 @@ import {
   ManyToOne,
   JoinColumn,
   Index,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -38,6 +39,10 @@ export class Member {
   @Expose()
   bankAccountNumber: string;
 
+  @Column({ nullable: true })
+  @Expose()
+  bankAccRef: string;
+
   @Column()
   @Expose()
   lineId: string;
@@ -47,7 +52,7 @@ export class Member {
   recommender: string;
 
   @Column()
-  @Expose()
+  @Exclude()
   password: string;
 
   @Column({ nullable: true })
@@ -58,11 +63,39 @@ export class Member {
   @Expose()
   parentId: number;
 
+  @Column({ nullable: true })
+  @Expose()
+  @Index()
+  hash: string;
+
+  @Column({ nullable: true })
+  @Expose()
+  company: string;
+
+  @Column({ nullable: true })
+  @Expose()
+  agent_username: string;
+
+  @Column({ nullable: true })
+  @Expose()
+  deposit_id_rico: number;
+
+  @Column({ nullable: true })
+  @Expose()
+  username: string;
+
   @CreateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)',
+    type: 'timestamp with time zone',
+    default: () => 'CURRENT_TIMESTAMP (6)',
   })
   public created_at: Date;
+
+  @UpdateDateColumn({
+    type: 'timestamp with time zone',
+    default: () => 'CURRENT_TIMESTAMP (6)',
+    onUpdate: 'CURRENT_TIMESTAMP (6)',
+  })
+  public updated_at: Date;
 
   @ManyToOne(() => Bank)
   @JoinColumn()

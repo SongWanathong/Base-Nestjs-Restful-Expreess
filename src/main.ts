@@ -48,9 +48,9 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('member')
     .build();
-  process.env.TZ = 'Asia/Bangkok';
+  // process.env.TZ = 'Asia/Bangkok';
+  // setTZ('Asia/Bangkok');
   const document = SwaggerModule.createDocument(app, config);
-  setTZ('Asia/Bangkok');
   SwaggerModule.setup('api', app, document);
 
   await app.listen(3000, () => {
