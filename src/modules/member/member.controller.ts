@@ -52,6 +52,7 @@ export class MemberController {
   }
 
   @Get('/find')
+  @UseInterceptors(ClassSerializerInterceptor)
   async findAndPagination(@Query() data): Promise<any> {
     const { query, option } = scopeSearch(data);
     return this.memberService.findAndPagination(

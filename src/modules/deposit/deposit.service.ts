@@ -4,7 +4,7 @@ import { UpdateDepositDto } from './dto/update-deposit.dto';
 import { Repository } from 'typeOrm';
 import { Deposit } from 'src/database/enitity/deposit.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import moment from 'moment';
+import * as moment from 'moment';
 
 @Injectable()
 export class DepositService {
@@ -15,7 +15,7 @@ export class DepositService {
   private baseQuery() {
     return this.depositModel
       .createQueryBuilder('deposit')
-      .orderBy('deposit.id', 'DESC');
+      .orderBy('deposit.created_at', 'DESC');
   }
 
   create(createDepositDto: CreateDepositDto) {
@@ -58,11 +58,12 @@ export class DepositService {
     }
   }
 
-  async alreadydeposit(id: string): Promise<any> {
+  async alreadydeposit(query: Deposit): Promise<any> {
     try {
+      console.log(query);
       const today = moment().format('YYYY-MM-DD');
       return await this.baseQuery()
-        .where({ id })
+        .where(query)
         .andWhere('DATE(deposit.created_at) >= DATE(:startDate)', {
           startDate: today + ' 00:00:00',
         })
@@ -118,8 +119,9 @@ export class DepositService {
   async onedayalldeposit() {
     try {
       const today = moment().format('YYYY-MM-DD');
-      const targetDesposit = await this.baseQuery()
-        .andWhere('DATE(deposit.created_at) >= DATE(:startDate)', {
+      const targetDesposit = await this.depositModel
+        .createQueryBuilder('deposit')
+        .where('DATE(deposit.created_at) >= DATE(:startDate)', {
           startDate: today + ' 00:00:00',
         })
         .select('SUM(deposit.amount)', 'sum')
@@ -145,11 +147,12 @@ export class DepositService {
       const endOfMonth = moment()
         .endOf('month')
         .format('YYYY-MM-DD hh:mm');
-
       const targetDesposit = await this.baseQuery()
 
-        .where('DATE(t.created_at) >= DATE(:startOfMonth)', { startOfMonth })
-        .andWhere('DATE(member.created_at) >= DATE(:endOfMonth)', {
+        .where('DATE(deposit.created_at) >= DATE(:startOfMonth)', {
+          startOfMonth,
+        })
+        .andWhere('DATE(deposit.created_at) <= DATE(:endOfMonth)', {
           endOfMonth,
         })
         .getMany();
@@ -165,10 +168,11 @@ export class DepositService {
   //     return static::where('member_id',$id)->orderby('updated_at','desc')->pluck('updated_at')->first();
   // }
 
-  async lastestTopupTime() {
+  async lastestTopupTime(memberId: string): Promise<Deposit> {
     try {
       return await this.depositModel
         .createQueryBuilder('deposit')
+        .where({ member_id: memberId })
         .orderBy('updated_at', 'DESC')
         .getOne();
     } catch (error) {
@@ -196,7 +200,7 @@ export class DepositService {
   // }
   async getStarttime(dpref: string) {
     try {
-      await this.depositModel.findOne({
+      return await this.depositModel.findOne({
         where: {
           dpref,
         },
